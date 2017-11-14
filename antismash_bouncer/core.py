@@ -9,21 +9,22 @@ async def bounce(app):
     db = app['engine']
 
     while True:
-        waitlists = await db.keys('{}*'.format(conf.prefix))
-        for wl in waitlists:
-            identifier = wl.split(':')[-1]
-            count = await count_identifiers_in_queue(app, identifier)
-            if count < conf.max_jobs:
-                await db.rpoplpush(wl, conf.queue)
-
+        await process_waitlists(conf, db)
         await asyncio.sleep(conf.interval)
 
 
-async def count_identifiers_in_queue(app, identifier):
-    """Count how many jobs in the queue have the given identifier"""
-    conf = app['run_conf']
-    db = app['engine']
+async def process_waitlists(conf, db):
+    """"""
+    waitlists = await db.keys('{}*'.format(conf.prefix))
+    for wl in waitlists:
+        identifier = wl.split(':')[-1]
+        count = await count_identifiers_in_queue(conf, db, identifier)
+        if count < conf.max_jobs:
+            await db.rpoplpush(wl, conf.queue)
 
+
+async def count_identifiers_in_queue(conf, db, identifier):
+    """Count how many jobs in the queue have the given identifier"""
     count = 0
     for job_id in await db.lrange(conf.queue, 0, -1):
         job = Job(db, job_id)

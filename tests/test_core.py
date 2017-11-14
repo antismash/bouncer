@@ -57,9 +57,27 @@ async def test_count_identifiers_in_queue(app):
     for j in fake_jobs:
         await db.lpush(conf.queue, j.job_id)
 
-    assert await core.count_identifiers_in_queue(app, 'alice@example.org') == 2
-    assert await core.count_identifiers_in_queue(app, 'bob@example.org') == 1
-    assert await core.count_identifiers_in_queue(app, 'chuck@example.org') == 1
-    assert await core.count_identifiers_in_queue(app, '123.123.123.234') == 3
-    assert await core.count_identifiers_in_queue(app, '123.123.123.235') == 1
-    assert await core.count_identifiers_in_queue(app, 'eve@example.org') == 0
+    assert await core.count_identifiers_in_queue(conf, db, 'alice@example.org') == 2
+    assert await core.count_identifiers_in_queue(conf, db, 'bob@example.org') == 1
+    assert await core.count_identifiers_in_queue(conf, db, 'chuck@example.org') == 1
+    assert await core.count_identifiers_in_queue(conf, db, '123.123.123.234') == 3
+    assert await core.count_identifiers_in_queue(conf, db, '123.123.123.235') == 1
+    assert await core.count_identifiers_in_queue(conf, db, 'eve@example.org') == 0
+
+
+@pytest.mark.asyncio
+async def test_process_waitlists(app):
+
+    conf = app['run_conf']
+    db = app['engine']
+
+    fake_jobs = await setup_fake_jobs(db)
+    await db.lpush('fake:waiting:alice@example.org', fake_jobs[0].job_id, fake_jobs[2].job_id)
+    await db.lpush('fake:waiting:bob@example.org', fake_jobs[1].job_id)
+    await db.lpush('fake:waiting:chuck@example.org', fake_jobs[3].job_id)
+
+    await core.process_waitlists(conf, db)
+
+    assert await core.count_identifiers_in_queue(conf, db, 'alice@example.org') == 1
+    assert await core.count_identifiers_in_queue(conf, db, 'bob@example.org') == 1
+    assert await core.count_identifiers_in_queue(conf, db, 'chuck@example.org') == 1
