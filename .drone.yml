@@ -2,7 +2,7 @@ pipeline:
   build:
     image: alpine
     commands:
-      - apk --no-cache add python3 ca-certificates
+      - apk --no-cache add python3 ca-certificates gcc musl-dev python3-dev
       - pip3 install .[testing]
       - pytest
 
