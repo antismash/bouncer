@@ -1,6 +1,6 @@
 """Tests for the core application logic"""
 
-from antismash_models import Job
+from antismash_models import AsyncJob as Job
 from argparse import Namespace
 import mockaioredis
 import pytest

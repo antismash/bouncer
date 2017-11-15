@@ -1,6 +1,6 @@
 """Core application logic"""
 import asyncio
-from antismash_models.job import Job
+from antismash_models.job import AsyncJob as Job
 
 
 async def bounce(app):

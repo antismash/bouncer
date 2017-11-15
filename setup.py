@@ -10,7 +10,7 @@ if os.path.exists('README.rst'):
 
 install_requires = [
     'aioredis',
-    'antismash_models',
+    'antismash_models >= 0.1.0',
     'aio-standalone',
     'envparse',
 ]
