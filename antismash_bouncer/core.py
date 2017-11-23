@@ -1,6 +1,7 @@
 """Core application logic"""
 import asyncio
 from antismash_models.job import AsyncJob as Job
+from datetime import datetime
 
 
 async def bounce(app):
@@ -20,7 +21,17 @@ async def process_waitlists(conf, db):
         identifier = wl.split(':')[-1]
         count = await count_identifiers_in_queue(conf, db, identifier)
         if count < conf.max_jobs:
-            await db.rpoplpush(wl, conf.queue)
+            job_id = await db.rpoplpush(wl, conf.queue)
+            if not job_id:
+                continue
+            job = Job(db, job_id)
+            try:
+                await job.fetch()
+            except ValueError:
+                continue
+            now = datetime.utcnow()
+            job.last_changed = now
+            await job.commit()
 
 
 async def count_identifiers_in_queue(conf, db, identifier):
