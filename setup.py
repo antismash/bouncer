@@ -10,7 +10,7 @@ if os.path.exists('README.rst'):
 
 install_requires = [
     'aioredis',
-    'antismash_models >= 0.1.0',
+    'antismash_models >= 0.1.13',
     'aio-standalone',
     'envparse',
 ]
@@ -20,7 +20,7 @@ tests_require = [
     'pytest',
     'coverage',
     'pytest-cov',
-    'mockaioredis',
+    'mockaioredis >= 0.0.13',
     'pytest-asyncio',
 ]
 

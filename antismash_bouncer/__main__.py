@@ -13,8 +13,6 @@ def main():
     env = Env(
         # Redis database URI
         BOUNCER_DB=dict(cast=str, default="redis://localhost:6379/0"),
-        # Redis queue
-        BOUNCER_QUEUE=dict(cast=str, default="jobs:queued"),
         # Prefix for the waitlist
         BOUNCER_WAITLIST_PREFIX=dict(cast=str, default="jobs:waiting:"),
         # Maximum allowed jobs in queue
@@ -27,9 +25,6 @@ def main():
     parser.add_argument('--database', dest='db',
                         default=env('BOUNCER_DB'),
                         help="URI of the database containing the job queue (default: %(default)s)")
-    parser.add_argument('-q', '--queue',
-                        default=env('BOUNCER_QUEUE'),
-                        help="Name of the main queue to let jobs into (default: %(default)s))")
     parser.add_argument('-p', '--prefix',
                         default=env('BOUNCER_WAITLIST_PREFIX'),
                         help="Prefix of the waitlists (default: %(default)s)")

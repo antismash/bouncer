@@ -19,25 +19,32 @@ async def process_waitlists(conf, db):
     waitlists = await db.keys('{}*'.format(conf.prefix))
     for wl in waitlists:
         identifier = wl.split(':')[-1]
-        count = await count_identifiers_in_queue(conf, db, identifier)
+
+        job_id = await db.lindex(wl, -1)
+        if not job_id:
+            continue
+
+        try:
+            job = await Job(db, job_id).fetch()
+        except ValueError:
+            continue
+
+        # if we can't move the job, we won't commit this change, so this is safe
+        queue = job.target_queues.pop()
+
+        count = await count_identifiers_in_queue(conf, db, identifier, queue)
         if count < conf.max_jobs:
-            job_id = await db.rpoplpush(wl, conf.queue)
-            if not job_id:
-                continue
-            job = Job(db, job_id)
-            try:
-                await job.fetch()
-            except ValueError:
-                continue
+            await db.rpoplpush(wl, queue)
+
             now = datetime.utcnow()
             job.last_changed = now
             await job.commit()
 
 
-async def count_identifiers_in_queue(conf, db, identifier):
+async def count_identifiers_in_queue(conf, db, identifier, queue):
     """Count how many jobs in the queue have the given identifier"""
     count = 0
-    for job_id in await db.lrange(conf.queue, 0, -1):
+    for job_id in await db.lrange(queue, 0, -1):
         job = Job(db, job_id)
         await job.fetch()
         if job.email == identifier or job.ip_addr == identifier:
@@ -51,7 +58,6 @@ class RunConfig:
         'interval',
         'max_jobs',
         'prefix',
-        'queue'
     ]
 
     def __init__(self, **kwargs):
