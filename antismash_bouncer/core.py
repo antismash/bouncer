@@ -38,6 +38,7 @@ async def process_waitlists(conf, db):
 
             now = datetime.utcnow()
             job.last_changed = now
+            job.trace.append(conf.name)
             await job.commit()
 
 
@@ -57,6 +58,7 @@ class RunConfig:
     __slots__ = [
         'interval',
         'max_jobs',
+        'name',
         'prefix',
     ]
 

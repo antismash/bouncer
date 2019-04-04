@@ -2,6 +2,7 @@
 import argparse
 from aiostandalone import StandaloneApplication
 from envparse import Env
+import platform
 
 from . import __version__
 from .core import RunConfig, bounce
@@ -19,6 +20,8 @@ def main():
         BOUNCER_MAXJOBS=dict(cast=int, default=5),
         # Interval to run check in, in seconds
         BOUNCER_INTERVAL=dict(cast=int, default=60),
+        # Name of the bouncer process in the job trace list
+        BOUNCER_NAME=dict(cast=str, default="{}-downloader".format(platform.node()))
     )
 
     parser = argparse.ArgumentParser(description='Allow jobs from a waitlist to enter the main queue')
@@ -34,6 +37,9 @@ def main():
     parser.add_argument('-i', '--interval',
                         default=env('BOUNCER_INTERVAL'), type=int,
                         help="Check interval in seconds (default: %(default)s)")
+    parser.add_argument('-n', '--name',
+                        default=env('BOUNCER_NAME'),
+                        help="Name of the bouncer process in the job trace list (default: %(default)s)")
     parser.add_argument('-V', '--version', action='version', version=__version__)
 
     args = parser.parse_args()

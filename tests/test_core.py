@@ -15,7 +15,7 @@ def db():
 
 @pytest.fixture
 def app(db):
-    args = Namespace(interval=5, max_jobs=1, prefix='fake:waiting:')
+    args = Namespace(interval=5, max_jobs=1, name='fake-bouncer', prefix='fake:waiting:')
     conf = core.RunConfig.from_argparse(args)
     app = dict(engine=db, run_conf=conf)
     return app
@@ -119,3 +119,5 @@ async def test_process_waitlists(app):
     # Added timestamps should not have changed
     for i, _ in enumerate(before_times):
         assert before_times[i] == after_times_added[i], i
+
+    assert fake_jobs[0].trace == [conf.name]
