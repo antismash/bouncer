@@ -21,7 +21,7 @@ def main():
         # Interval to run check in, in seconds
         BOUNCER_INTERVAL=dict(cast=int, default=60),
         # Name of the bouncer process in the job trace list
-        BOUNCER_NAME=dict(cast=str, default="{}-downloader".format(platform.node()))
+        BOUNCER_NAME=dict(cast=str, default="{}-bouncer".format(platform.node()))
     )
 
     parser = argparse.ArgumentParser(description='Allow jobs from a waitlist to enter the main queue')
