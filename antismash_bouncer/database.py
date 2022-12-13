@@ -1,6 +1,7 @@
 """Database connectivity"""
 
-import aioredis
+from aiostandalone import StandaloneApplication
+from redis.asyncio import Redis
 
 
 class DatabaseConfig:
@@ -35,15 +36,21 @@ class DatabaseConfig:
         return cls(host, port, db)
 
 
-async def init_db(app):
+async def init_db(app: StandaloneApplication):
     """Initialize the database connection
 
     :param app: Application to init the database for
     """
-    conf = app['db_conf']
+    conf: DatabaseConfig = app['db_conf']
     app.logger.debug("Connecting to redis://%s:%s/%s", conf.host, conf.port, conf.db)
 
-    engine = await aioredis.create_redis((conf.host, conf.port), db=conf.db, encoding='utf-8', loop=app.loop)
+    engine = await Redis(
+        host=conf.host,
+        port=conf.port,
+        db=conf.db,
+        encoding='utf-8',
+        decode_responses=True,
+    )
     app['engine'] = engine
 
 
@@ -54,5 +61,4 @@ async def close_db(app):
     """
     engine = app['engine']
     app.logger.debug("Closing redis connection")
-    engine.close()
-    await engine.wait_closed()
+    await engine.close()

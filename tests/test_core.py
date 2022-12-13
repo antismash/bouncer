@@ -1,23 +1,34 @@
 """Tests for the core application logic"""
-
-from antismash_models import AsyncJob as Job
+import asyncio
 from argparse import Namespace
 from datetime import datetime, timedelta
-import mockaioredis
+
+from aiostandalone import StandaloneApplication
+from antismash_models import AsyncJob as Job
+import fakeredis.aioredis as fakeredis
 import pytest
 
 from antismash_bouncer import core
 
 @pytest.fixture
-def db():
-    return mockaioredis.MockRedis(encoding='utf-8')
+def loop() -> asyncio.AbstractEventLoop:
+    _loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(_loop)
+    return _loop
 
 
 @pytest.fixture
-def app(db):
+def db():
+    return fakeredis.FakeRedis(encoding='utf-8', decode_responses=True)
+
+
+@pytest.fixture
+def app(db, loop):
     args = Namespace(interval=5, max_jobs=1, name='fake-bouncer', prefix='fake:waiting:')
     conf = core.RunConfig.from_argparse(args)
-    app = dict(engine=db, run_conf=conf)
+    app = StandaloneApplication(loop=loop)
+    app['engine'] = db
+    app['run_conf'] = conf
     return app
 
 
