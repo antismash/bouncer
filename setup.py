@@ -17,6 +17,8 @@ install_requires = [
 
 
 tests_require = [
+    'flake8',
+    'mypy',
     'pytest',
     'coverage',
     'pytest-cov',

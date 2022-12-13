@@ -1,22 +1,25 @@
 """Core application logic"""
 import asyncio
-from antismash_models.job import AsyncJob as Job
 from datetime import datetime
 
+from aiostandalone import StandaloneApplication
+from antismash_models.job import AsyncJob as Job
+from redis.asyncio import Redis
 
-async def bounce(app):
-    """Bounce jobs from the waitlist to the main queue"""
-    conf = app['run_conf']
-    db = app['engine']
+
+async def bounce(app: StandaloneApplication):
+    """ Bounce jobs from the waitlist to the main queue """
+    conf: RunConfig = app['run_conf']
+    db: Redis = app['engine']
 
     while True:
         await process_waitlists(conf, db)
-        await asyncio.sleep(conf.interval)
+        await asyncio.sleep(conf.interval)  # type: ignore  # mypy doesn't like dynamic slots
 
 
-async def process_waitlists(conf, db):
-    """"""
-    waitlists = await db.keys('{}*'.format(conf.prefix))
+async def process_waitlists(conf: "RunConfig", db: Redis):
+    """ Process the wait lists """
+    waitlists = await db.keys('{}*'.format(conf.prefix))  # type: ignore  # dynamic slot
     for wl in waitlists:
         identifier = wl.split(':')[-1]
 
@@ -33,12 +36,12 @@ async def process_waitlists(conf, db):
         queue = job.target_queues.pop()
 
         count = await count_identifiers_in_queue(conf, db, identifier, queue)
-        if count < conf.max_jobs:
+        if count < conf.max_jobs:  # type: ignore  # dynamic slot
             await db.rpoplpush(wl, queue)
 
             now = datetime.utcnow()
             job.last_changed = now
-            job.trace.append(conf.name)
+            job.trace.append(conf.name)  # type: ignore  # dynamic slot
             await job.commit()
 
 
