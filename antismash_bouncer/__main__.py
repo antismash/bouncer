@@ -7,6 +7,7 @@ import platform
 from . import __version__
 from .core import RunConfig, bounce
 from .database import DatabaseConfig, init_db, close_db
+from .log import core_logger, setup_logging
 
 
 def main():
@@ -43,8 +44,9 @@ def main():
     parser.add_argument('-V', '--version', action='version', version=__version__)
 
     args = parser.parse_args()
+    setup_logging()
 
-    app = StandaloneApplication()
+    app = StandaloneApplication(logger=core_logger)
 
     db_conf = DatabaseConfig.from_argparse(args)
     app['db_conf'] = db_conf

@@ -13,11 +13,11 @@ async def bounce(app: StandaloneApplication):
     db: Redis = app['engine']
 
     while True:
-        await process_waitlists(conf, db)
+        await process_waitlists(app, conf, db)
         await asyncio.sleep(conf.interval)  # type: ignore  # mypy doesn't like dynamic slots
 
 
-async def process_waitlists(conf: "RunConfig", db: Redis):
+async def process_waitlists(app: StandaloneApplication, conf: "RunConfig", db: Redis):
     """ Process the wait lists """
     waitlists = await db.keys('{}*'.format(conf.prefix))  # type: ignore  # dynamic slot
     for wl in waitlists:
@@ -43,6 +43,7 @@ async def process_waitlists(conf: "RunConfig", db: Redis):
             job.last_changed = now
             job.trace.append(conf.name)  # type: ignore  # dynamic slot
             await job.commit()
+            app.logger.debug("Admitting job %s from waitlist %s", job.job_id, wl)
 
 
 async def count_identifiers_in_queue(conf, db, identifier, queue):
