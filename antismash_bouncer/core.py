@@ -50,6 +50,8 @@ async def process_waitlists(app: StandaloneApplication, conf: "RunConfig", db: R
             job.trace.append(conf.name)  # type: ignore  # dynamic slot
             await job.commit()
             app.logger.debug("Admitting job %s from waitlist %s", job.job_id, wl)
+        else:
+            app.logger.debug("%s has too many jobs in queue to admit %s", identifier, job.job_id)
 
 
 async def count_identifiers_in_queue(conf, db, identifier, queue):
