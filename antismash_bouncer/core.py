@@ -35,6 +35,12 @@ async def process_waitlists(app: StandaloneApplication, conf: "RunConfig", db: R
         # if we can't move the job, we won't commit this change, so this is safe
         queue = job.target_queues.pop()
 
+        # if the target queue has more than max_target_jobs, don't move job back
+        target_queue_len = await db.llen(queue)
+        if target_queue_len > conf.max_target_jobs:
+            app.logger.debug("Target queue has %s jobs, not moving waitlisted job", target_queue_len)
+            continue
+
         count = await count_identifiers_in_queue(conf, db, identifier, queue)
         if count < conf.max_jobs:  # type: ignore  # dynamic slot
             await db.rpoplpush(wl, queue)
@@ -62,6 +68,7 @@ class RunConfig:
     __slots__ = [
         'interval',
         'max_jobs',
+        'max_target_jobs',
         'name',
         'prefix',
     ]

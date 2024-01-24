@@ -19,6 +19,8 @@ def main():
         BOUNCER_WAITLIST_PREFIX=dict(cast=str, default="jobs:waiting:"),
         # Maximum allowed jobs in queue
         BOUNCER_MAXJOBS=dict(cast=int, default=5),
+        # Maximum jobs of the target queue
+        BOUNCER_MAX_TARGET_JOBS=dict(cast=int, default=50),
         # Interval to run check in, in seconds
         BOUNCER_INTERVAL=dict(cast=int, default=60),
         # Name of the bouncer process in the job trace list
@@ -35,6 +37,9 @@ def main():
     parser.add_argument('-m', '--max-jobs',
                         default=env('BOUNCER_MAXJOBS'), type=int,
                         help="Maximum jobs a waitlisted entity can have in the main queue (default: %(default)s)")
+    parser.add_argument('-t', '--max-target-jobs',
+                        default=env('BOUNCER_MAX_TARGET_JOBS'), type=int,
+                        help="Maximum number of jobs the target queue can have before we stop moving jobs from a waitlist (default: %(default)s)")
     parser.add_argument('-i', '--interval',
                         default=env('BOUNCER_INTERVAL'), type=int,
                         help="Check interval in seconds (default: %(default)s)")
