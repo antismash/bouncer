@@ -6,12 +6,10 @@ from redis.asyncio import Redis
 
 class DatabaseConfig:
     """Class collecting all the database-related configuraion"""
-    __slots__ = ('host', 'port', 'db')
+    __slots__ = ('uri')
 
-    def __init__(self, host, port, db):
-        self.host = host
-        self.port = port
-        self.db = db
+    def __init__(self, uri: str):
+        self.uri = uri
 
     @classmethod
     def from_argparse(cls, args):
@@ -19,21 +17,9 @@ class DatabaseConfig:
 
         :param args: argparse.Namespace containing the database-related settings
         """
-        assert args.db.startswith('redis://')
+        assert args.db.startswith('redis')
 
-        # skip the protocol
-        queue = args.db[8:]
-
-        parts = queue.split('/')
-        db = 0 if len(parts) < 2 else int(parts[-1])
-
-        parts = parts[0].split(':')
-
-        port = 6379 if len(parts) < 2 else int(parts[-1])
-
-        host = parts[0]
-
-        return cls(host, port, db)
+        return cls(args.db)
 
 
 async def init_db(app: StandaloneApplication):
@@ -42,12 +28,10 @@ async def init_db(app: StandaloneApplication):
     :param app: Application to init the database for
     """
     conf: DatabaseConfig = app['db_conf']
-    app.logger.debug("Connecting to redis://%s:%s/%s", conf.host, conf.port, conf.db)
+    app.logger.debug("Connecting to %s", conf.uri)
 
-    engine = await Redis(
-        host=conf.host,
-        port=conf.port,
-        db=conf.db,
+    engine = await Redis.from_url(
+        conf.uri,
         encoding='utf-8',
         decode_responses=True,
     )
